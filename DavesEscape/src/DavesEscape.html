@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>Dave's Escape</title>
+    <style>
+#gameOverScreen{
+display:none;
+}
+.arcade{
+background-image: url("../images/startScreen.jpg");
+background-repeat: no-repeat;
+position:absolute;
+left: 100px;
+top:50px;
+width:896px;
+height:640px;
+border-radius: 20px;
+}
+#endPage{
+display:none;
+}
+canvas{
+position:absolute;
+left:100px;
+top:50px;
+}
+#toPlay{
+position:absolute;
+background-image: url("../images/easy.png");
+width: 325px;
+height: 82px;
+z-index:9999;
+left: 310px;
+top: 140px;
+border-radius: 20px;
+height 60px;
+width 70px;
+background-image
+}
+#toPlayHard{
+position:absolute;
+background-image: url("../images/hard.png");
+z-index: 9999;
+width: 325px;
+height: 82px;
+left: 310px;
+top: 215px;
+border-radius: 20px;
+height 60px;
+width 70px;
+}
+#gameOver{
+position:absolute;
+display:block;
+background-image: url("../images/gameOver.png");
+background-repeat: no-repeat;
+background-position: center; 
+z-index: 99999;
+width: 150px;
+height:100px;
+left:390px;
+top:145px;
+}
+    </style>
+</head>
+<body>
+    <div id="startPage" class="arcade">
+        <div id="toPlay"></div>
+        <div id="toPlayHard"></div>
+    </div>
+   
+    <!-- The canvas -->
+    <canvas width="896" height="640"></canvas>
+    
+    <div id="endPage" class="arcade">
+        <div id="gameOver"></div>
+    </div>
+    
+    <audio id="background" src="../audio/background.mp3"></audio>
+    <audio id="gem" src="../audio/gem.mp3"></audio>
+    <audio id="keyPop" src="../audio/keyPop.mp3"></audio>
+    <audio id="doorPop" src="../audio/door.wav"></audio>
+    <audio id="win" src="../audio/win.mp3"></audio>
+    <audio id="start" src="../audio/start.wav"></audio>
+    <audio id="fail" src="../audio/fail.wav"></audio>
+    <audio id="gameOverAudio" src="../audio/gameOver.wav"></audio>
+
+
+    <!-- The game code -->
+    <script src="requestAnimationFramePolyfill.js"></script>
+    <script src="objects.js"></script>
+    <script src="collision.js"></script>
+    <script src="timeBombPanic.js"></script>
+
+</body>
+</html>
