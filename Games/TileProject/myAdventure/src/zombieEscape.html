@@ -1,0 +1,659 @@
+﻿<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>Island Adventure</title>
+    <style>
+        * {
+            padding: 0px;
+            margin: 0px;
+        }
+        #scene{
+            position: relative;
+            width: 939px;
+            height: 500px;
+            margin: 10px;
+            margin-left:60px;
+            background-image: url("../images/background.jpg");
+            display:none;
+        }
+        #startScreen{
+            position: relative;
+            width: 939px;
+            height: 500px;
+            margin-left:80px;
+            background-image: url("../images/bback.jpg");
+        }
+        
+        #stage {
+            position: absolute;
+            width: 940px;
+            height: 300px;
+            margin-top: 88px;
+            
+            display:none;
+        }
+
+        .cell {
+            display: block;
+            position: absolute;
+            width: 67px;
+            height: 67px;
+        }
+
+        #game {
+            width: 1100px;
+            height: 600px;
+            background-color: ghostwhite;
+            border: 1px dashed black;
+            margin-left:200px;
+        }
+
+        @font-face {
+            font-family: PiratesWriters;
+            src: url("../fonts/PiratesWriters.ttf");
+        }
+
+        h1 {
+            text-align: center;
+            font-family: PiratesWriters;
+            font-size: 50px;
+            
+        }
+
+        p {
+            font-family: PiratesWriters;
+            font-size: 20px;
+            width: 384px;
+            padding: 10px;
+
+        }
+        h2 {
+            text-align: center;
+            font-family: PiratesWriters;
+            font-size: 40px;
+            padding-top: 80px;
+        }
+        #directions {
+            text-align:left;
+            font-size: larger;
+            padding-left:290px;
+            padding-top: 60px;
+        }
+        #startButton {
+            position: absolute;
+            left: 100px;
+            top:250px;
+            font-size: large;
+            width: 100px;
+            height: 65px;
+            border: 3px solid grey;
+            border-radius: 25px 25px;
+        }
+        #output {
+            margin-top:20px;
+        }
+    </style>
+</head>
+<body>
+    <section id="game">
+        <h1>Island Escape</h1>
+        <div id="startScreen">
+            <h2>Welcome to Island Escape!</h2>
+            <p id="directions">Directions: Use the arrow keys to make it to the boat. Make sure to grab the bucket and paddle and watch out for the hungry zombie!
+            <br />
+            <br />
+            Tips: Accumulate experience to increase health.
+            <br />
+            Dont run out of food or water
+            <br />
+            Getting the bucket and paddle also helps with fights!</p>
+            <button id="startButton">Click to Play!</button>
+        </div>
+        <div id="scene">
+            
+            <div id="stage">
+            </div>
+            
+            <audio id="audio" src="../audio/background.mp3"></audio>
+            <audio id="food" src="../audio/food.mp3"></audio>
+            <audio id="attack" src="../audio/attack.mp3"></audio>
+            <audio id="death"src="../audio/death.mp3"></audio>
+            <audio id="drink" src="../audio/drink.mp3"></audio>
+            <audio id="step" src="../audio/step.mp3"></audio>
+        
+        </div>
+        
+        <p id="output"></p>
+    </section>
+
+    <script>
+
+//Get a reference to the stage and output and other cool stuff used later
+var playButton = document.querySelector("#startButton")
+var stage = document.querySelector("#stage");
+var output = document.querySelector("#output");
+var startScreen = document.querySelector("#startScreen");
+var scene = document.querySelector("#scene");
+
+        //audio files
+var myBackgroundAudio = document.querySelector("#audio");
+var foodAudio = document.querySelector("#food");
+var attackAudio = document.querySelector("#attack");
+var deathAudio = document.querySelector("#death");
+var drinkAudio = document.querySelector("#drink");
+var stepAudio = document.querySelector("#step");
+
+playButton.addEventListener("click", clickHandler, false);
+
+//this guy starts the game, initiating the constantly awesome background music and hiding/un-hiding divs
+function clickHandler()
+{
+    startScreen.style.display = "none";
+    stage.style.display = "block";
+    scene.style.display = "block";
+    render();
+    myBackgroundAudio.loop = true;
+    myBackgroundAudio.play();
+
+}
+
+//Add a keyboard listener that evidently also confuses all keys with with wasting a turn.
+window.addEventListener("keydown", keydownHandler, false);
+
+//The game map(the stuff that doesnt move)
+var map =
+[
+  [1, 2, 9, 0, 0, 0, 2, 9, 7, 0, 0, 0, 9, 3],
+  [8, 9, 0, 0, 1, 0, 0, 0, 9, 0, 0, 0, 9, 9],
+  [0, 0, 2, 9, 6, 9, 0, 0, 0, 0, 0, 2, 0, 8],
+  [0, 0, 0, 0, 8, 0, 1, 0, 0, 8, 0, 0, 0, 0],
+  [0, 0, 0, 0, 2, 0, 0, 0, 0, 8, 0, 0, 0, 0]
+];
+
+//The game objects map (The stuff that moves...)
+var gameObjects =
+[
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+];
+
+//Map codes
+var LAND = 0;
+var DRINK = 1; //rum, for the open seas. Our player is a drunk and has to constantly drink rum to survive.
+var FOOD = 2;
+var BOAT = 3;
+var PLAYER = 4;
+var ZOMBIE = 5;
+var BUCKET = 6;//used to de-flood the boat, also can be a stylish helmet
+var PADDLE = 7; //used to escape on the boat, but can also be used as a weapon!
+var BLOCK1 = 8; //bad naming, but they're bushes that you can hide in
+var TAKO = 9 //tako is octopus in japanese. Here they are zombie versions that like to hang out next to food
+
+
+//The size of each cell
+var SIZE = 67; //because i liked this number
+
+//The number of rows and columns
+var ROWS = map.length;
+var COLUMNS = map[0].length;
+
+//Find the player's and zombie's start positions
+var playerRow;
+var playerColumn;
+var zombieRow;
+var zombieColumn;
+
+for(var row = 0; row < ROWS; row++)
+{
+  for(var column = 0; column < COLUMNS; column++)
+  {
+    if(gameObjects[row][column] === PLAYER)
+    {
+      playerRow = row;
+      playerColumn = column;
+    }
+    if (gameObjects[row][column] === ZOMBIE)
+    {
+      zombieRow = row;
+      zombieColumn = column;
+    }
+  }
+}
+
+//Arrow key codes
+var UP = 38;
+var DOWN = 40;
+var RIGHT = 39;
+var LEFT = 37;
+
+//The game variables
+var hasPaddle = false;
+var hasBucket = false;
+var food = 10;
+var drink = 10;
+var health = 10;
+var experience = 0;
+var gameMessage = "Use the arrow keys to escape the zombie infested island.";
+var hasArmor = false;
+var hasWeapon = false;
+var turn = 0;
+var maxHealth = 10; //because maxHealth and health are not the same thing for non-l33t players
+
+
+render();
+
+        //its all about moving
+function keydownHandler(event)
+{
+  switch(event.keyCode)
+  {
+    case UP:
+	    if(playerRow > 0)
+	    {
+	      //Clear the player's current cell
+	      gameObjects[playerRow][playerColumn] = 0;
+
+	      //Subract 1 from the player's row
+	      playerRow--;
+
+	        //Apply the player's new updated position to the array
+	      gameObjects[playerRow][playerColumn] = PLAYER;
+	    }
+	    break;
+
+	  case DOWN:
+	      if (playerRow < ROWS - 1)
+	    {
+	          gameObjects[playerRow][playerColumn] = 0;
+	          playerRow++;
+	          gameObjects[playerRow][playerColumn] = PLAYER;
+	    }
+	    break;
+
+	  case LEFT:
+	      if (playerColumn > 0)
+	    {
+	          gameObjects[playerRow][playerColumn] = 0;
+	      playerColumn--;
+	      gameObjects[playerRow][playerColumn] = PLAYER;
+	    }
+	    break;
+
+	  case RIGHT:
+	      if (playerColumn < COLUMNS - 1)
+	    {
+	          gameObjects[playerRow][playerColumn] = 0;
+	          playerColumn++;
+	          gameObjects[playerRow][playerColumn] = PLAYER;
+	    }
+	    break;
+  }
+
+    //find out what kind of cell the player is on
+  switch (map[playerRow][playerColumn])
+  {
+      case LAND:
+          attackAudio.play(); //I just thought the attack audio was a better fit for walking
+          break;
+
+      case ZOMBIE:
+          deathAudio.play(); 
+          endGame(); //You DIED!
+          break;
+
+      case FOOD:
+          foodAudio.play(); //chomp chomp
+          map[playerRow][playerColumn] = 0; //replaces the food with NO FOOD!
+          food += 5;
+          experience += 1; //because we are generous
+          break;
+
+      case DRINK:
+          drinkAudio.play();
+          map[playerRow][playerColumn] = 0;
+          drink += 5;
+          experience += 1; //you alchy!
+          break;
+
+      case PADDLE:
+          attackAudio
+          map[playerRow][playerColumn] = 0;
+          hasPaddle = true; //I can row!
+          hasWeapon = true; //I can kill TAKO!
+          break;
+
+      case BUCKET:
+          map[playerRow][playerColumn] = 0;
+          hasBucket = true; //It scoops water!
+          hasArmor = true; //It goes on my head!
+          break;
+
+      case TAKO:
+          stepAudio.play(); //because the walking audio sounded better as a fighting audio...
+          fight();
+          break;
+
+      case BLOCK1:
+          attackAudio.play();
+          break;
+
+      case BOAT:
+          if(hasBucket && hasPaddle)
+          {
+            endGame(); //I DID IT!
+          }    
+        break;
+  }
+
+    //Move zombie
+  moveZombie();
+
+
+    //Find out if the player is touching a zombie
+  if (gameObjects[playerRow][playerColumn] === ZOMBIE)
+  {
+    endGame();
+  }
+
+  //Subtract some food every other turn
+  if (turn % 2 === 1)
+  {
+      food--;
+      drink--;
+  }
+  if (turn % 5 === 1 && health < maxHealth)
+  {
+      health += 1;
+  }
+  
+    //you can get stronger!
+  maxHealth = 10 + Math.ceil(experience * .2);
+  turn++;
+  
+
+    //Find out if the player has run out of food or health 
+  if(food <= 0 || health <= 0 || drink <=0)
+  {
+      deathAudio.play(); //must drink...more...rum! /hasDied = youSuck
+    endGame();
+  }
+
+
+  //Render the game
+  render();
+}
+
+function moveZombie()
+{
+  //The 4 possible directions that the zombie can move
+  var UP = 1;
+  var DOWN = 2;
+  var LEFT = 3;
+  var RIGHT = 4;
+
+  //An array to store the valid direction that
+  //the zombie are allowed to move in
+  var validDirections = []; //you can change this to a 2d array and use a for loop for more zombies. I did that, but then i realized it would take me too
+    //long so i simplified it back to one.
+
+  //The final direction that the zombie will move in
+  var direction = undefined;
+
+  //Find out what kinds of things are in the cells
+  //that surround the zombie. If the cells contain land,
+  //push the corresponding direction into the validDirections array
+        
+      //because zombies don't care if they step on your food, but they are afraid of TAKO...and bushes.
+      if (zombieRow > 0) {
+          var thingAbove = map[zombieRow - 1][zombieColumn];
+          if (thingAbove === LAND || thingAbove === FOOD || thingAbove === DRINK) {
+              validDirections.push(UP);
+          }
+      }
+      if (zombieRow < ROWS - 1) {
+          var thingBelow = map[zombieRow + 1][zombieColumn];
+          if (thingBelow === LAND || thingBelow === FOOD || thingBelow === DRINK) {
+              validDirections.push(DOWN);
+          }
+      }
+      if (zombieColumn > 0) {
+          var thingToTheLeft = map[zombieRow][zombieColumn - 1];
+          if (thingToTheLeft === LAND || thingToTheLeft === FOOD || thingToTheLeft === DRINK) {
+              validDirections.push(LEFT);
+          }
+      }
+      if (zombieColumn < COLUMNS - 1) {
+          var thingToTheRight = map[zombieRow][zombieColumn + 1];
+          if (thingToTheRight === LAND || thingToTheRight === FOOD || thingToTheRight === DRINK) {
+              validDirections.push(RIGHT);
+          }
+      }
+  
+
+      //The validDirections array now contains 0 to 4 directions that the
+      //contain LAND cells. Which of those directions will the zombie
+      //choose to move in?
+
+      //If a valid direction was found, Randomly choose one of the
+      //possible directions and assign it to the direction variable
+      
+      if (validDirections.length !== 0) {
+          var randomNumber = Math.floor(Math.random() * validDirections.length);
+          direction = validDirections[randomNumber];
+      }
+
+      //Move the zombie in the chosen direction
+      switch (direction) {
+          case UP:
+              //Clear the zombie's current cell
+              gameObjects[zombieRow][zombieColumn] = 0;
+              //Subtract 1 from the zombie's row
+              zombieRow--;
+              //Apply the zombie's new updated position to the array
+              gameObjects[zombieRow][zombieColumn] = ZOMBIE;
+              break;
+
+          case DOWN:
+              gameObjects[zombieRow][zombieColumn] = 0;
+              zombieRow++;
+              gameObjects[zombieRow][zombieColumn] = ZOMBIE;
+              break;
+
+          case LEFT:
+              gameObjects[zombieRow][zombieColumn] = 0;
+              zombieColumn--;
+              gameObjects[zombieRow][zombieColumn] = ZOMBIE;
+              break;
+
+          case RIGHT:
+              gameObjects[zombieRow][zombieColumn] = 0;
+              zombieColumn++;
+              gameObjects[zombieRow][zombieColumn] = ZOMBIE;
+      }
+}
+
+function fight()
+{
+    //weapons and armor are essential for any zombie apocalypse.
+    var armor = 0
+    var weaponStrength = 0;
+    if (hasWeapon == true)
+    {
+        weaponStrength = 3;
+    }
+    if (hasArmor == true)
+    {
+        armor = 2;
+    }
+   
+    //The player strength
+    var playerStrength = Math.ceil((Math.random() * 10));
+    var totalStrength = playerStrength + weaponStrength;
+    //A random number between 1 and 1.5 the player's strength
+    var takoStrength = Math.ceil(Math.random() * playerStrength * 2);
+
+    if (takoStrength > totalStrength)
+  {
+        //The tako beats the player
+        var stolenHealth = Math.round(takoStrength / 2.5 - armor); //Because I don't want it to be too brutal.
+        health -= stolenHealth;
+        food -= Math.ceil(food / 2);
+        
+    //Give the player some experience for trying
+    experience += 1;
+    
+    //Update the game message
+    gameMessage
+      = "You fought the Tako but lost " + stolenHealth + " health."
+      + " The Tako stole your food and ran off laughing." //haha
+      + " Player's strength: " + totalStrength
+      + " Tako's strength: " + takoStrength
+      + " Player's health: " + health;
+  }
+  else
+  {
+        //killed the Tako 
+        map[playerRow][playerColumn] = 0;
+    //Add some experience
+    experience += 5;
+
+    //Update the game message
+    gameMessage
+      = "You fight and WIN! " //-yay
+      + " Player's strength: " + playerStrength
+      + " Tako's strength: " + takoStrength;
+  }
+}
+
+function endGame()
+{
+    if (map[playerRow][playerColumn] === BOAT)
+  {
+    //Calculate the score
+    var score = food + drink + experience;
+
+    //Display the game message
+    gameMessage
+      = "You made it off the island ALIVE! " + "Final Score: " + score;
+  }
+    else if (gameObjects[playerRow][playerColumn] === ZOMBIE)
+  {
+    gameMessage
+      = "You have been eaten by the zombie! BRAINSSSS!";
+  }
+  else
+  {
+    //Display the game message
+    if(food <= 0)
+    {
+      gameMessage += " You ran out of food!";
+    }
+    else
+    {
+      gameMessage += " You have died! GAMEOVER";
+    }
+  }
+
+  //Remove the keyboard listener to end the game
+  window.removeEventListener("keydown", keydownHandler, false);
+}
+
+function render()
+{
+  //Clear the stage of img cells
+  //from the previous turn
+
+  if(stage.hasChildNodes() && stage.style.display === "block") //I had to add the  && block because originally i was hiding the display
+  {
+    for(var i = 0; i < ROWS * COLUMNS; i++)
+    {
+      stage.removeChild(stage.firstChild);
+    }
+  }
+
+  //Render the game by looping through the map arrays
+  for(var row = 0; row < ROWS; row++)
+  {
+    for(var column = 0; column < COLUMNS; column++)
+    {
+      //Create a img tag called cell
+      var cell = document.createElement("img");
+
+      //Set it's CSS class to "cell"
+      cell.setAttribute("class", "cell");
+
+      //Add the img tag to the <div id="stage"> tag
+      stage.appendChild(cell);
+
+      //Find the correct image for this map cell
+      switch(map[row][column])
+      {
+        case LAND://no image needed.
+          break;
+
+        case BOAT:
+          cell.src = "../images/boat.png";
+          break;
+
+          case PADDLE:
+              cell.src = "../images/paddle.png";
+              break;
+
+          case BUCKET:
+              cell.src = "../images/bucket.png";
+              break;
+
+          case DRINK:
+              cell.src = "../images/drink.png";
+              break;
+
+          case FOOD:
+              cell.src = "../images/food.png";
+              break;
+
+          case BLOCK1:
+              cell.src = "../images/block1.png";
+              break;
+
+          case TAKO:
+              cell.src = "../images/monster.png";
+      }
+
+        //Add the player and zombie from the gameObjects array
+	    switch(gameObjects[row][column])
+	    {
+	      case PLAYER:
+	          cell.src = "../images/0.png";
+	          break;
+
+	      case ZOMBIE:
+	          cell.src = "../images/zombie1.png";
+	          break;
+
+	      
+
+	    }
+
+      //Position the cell
+      cell.style.top = row * SIZE + "px";
+      cell.style.left = column * SIZE + "px";
+    }
+  }
+
+  //Display the game message
+	output.innerHTML = gameMessage;
+
+	//Display the player's food, drink, health and experience
+	output.innerHTML
+	  += "<br>Drink: " + drink + ", Food: "
+	  + food + ", Experience: " + experience
+      + ", Health: " + health + "/" +maxHealth;
+}
+
+    </script>
+</body>
+</html>

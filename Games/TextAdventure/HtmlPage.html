@@ -1,0 +1,770 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Text Adventure</title>
+	<meta charset="utf-8" />
+    <style>
+#gameContainer{
+    width:750px; 
+    height:650px;
+	float:left;
+	margin-top:25px;
+	padding:20px;
+	background-color:#999966;
+}
+h1{
+    text-align:center;
+}
+#commandList{
+    text-align:center;
+	float:left;
+	margin-top:25px;
+	margin-left:20px;
+	padding:20px;
+	width:200px; height:650px;
+	background-color:#CCCCCC;
+}
+ul{
+    font-size:larger;
+    list-style:none;
+    margin-left: -40px;
+}
+img{
+    margin-left:100px;
+}
+input
+{
+  position: absolute;
+  top: 510px;
+  left: 280px;
+  width: 160px;
+  padding: 2px 2px 2px 5px;
+  border: 1px solid black;
+  background-color: rgba(255,255,255,0.3);
+  -webkit-box-shadow: 5px 5px 3px rgba(0,0,0,0.5);
+	-moz-box-shadow: 5px 5px 3px rgba(0,0,0,0.5);
+	box-shadow: 3px 3px 5px rgba(0,0,0,0.4);
+}
+#proceed{
+    position:absolute;
+    top: 510px;
+    left: 450px;
+}
+#save, #load
+{
+    margin-left: 20px;
+    margin-top: 40px;
+    width: 60px;
+    height:30px;
+    border:3px solid black;
+    border-radius:5px 5px;
+    background-color:burlywood;
+}
+
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="stage">
+            <h1>Text Adventure</h1>
+            <img id="gameImage" src="images/seCell.jpg" width="500" height="400">
+            <p id="output"></p>
+            <input id="input" type="text">
+            <button id="proceed">Proceed</button>
+            
+        </div>
+
+    </div>
+
+    <div id="commandList">
+        <h2>Command list</h2>
+        <ul>
+            
+            <li>north</li> 
+            <li>south</li> 
+            <li>east</li> 
+            <li>west</li>
+            <li>help</li>
+            <li>take</li>
+            <li>use</li>
+            <li>pull</li>
+            <li>left</li>
+            <li>center</li>
+            <li>right</li>
+            <li>lever</li>
+            <li>and more!</li>
+
+        </ul>
+        <button id="save">Save</button>
+        <br />
+        <button id="load">Load</button>
+
+    </div>
+
+    <script>
+
+        // Declare Variables
+        var inGame = false;
+        var playerPoisoned = true;
+        var dead = false;
+        var usedSkeletonKey = false;
+        var usedTortureKey = false;
+        var puzzleSolved = false;
+        var left = false;
+        var center = false;
+        var right = false;
+
+        var playerLocation = 11;
+        var playerHealth = 12;
+        var playerCommand = "";
+
+        var inventory = [];
+        // Commands availabe to player
+        var commandList = ["north", "east", "south", "west", "help", "take", "use", "pull"];
+        var command = "";
+
+        var gameMessage = "";
+        // Items available for interaction
+        var interactables = ["left lever","center lever", "right lever"];
+        var itemList = ["skeleton key", "bloody key", "pink vial", "yellow vial"]
+        var itemLocations = [5, 2, 6, 6, 3, 11];
+        var item = "";
+        var whichLever = "";
+
+        var image = document.getElementById("gameImg");
+
+        //variables to track puzzle status and "unlock" rooms
+        var puzzleLock1 = 1;
+        var puzzleLock2 = 10;
+        var puzzleLock3 = 15;
+
+        var leverTurn = 0;
+        var puzzlecount = 0;
+        var lever1 = [4, -2, 10];
+        var lever2 = [-3, 2, -10];
+        var lever3 = [3, -4, 7];
+
+        var gameMap = [];
+        gameMap[0] = "There's a crack in the wall behind the door. It leads outside";
+        gameMap[1] ="Three levers embedded in the wall.";
+        gameMap[2] ="Another cell, another key. More dead guards.";
+        gameMap[3] ="A kitchen. A head on the counter. Just the head. Room to the south.";
+        gameMap[4] ="Looked door at the north and west. Bodies litter the floor.";
+        gameMap[5] ="Wardens room, key on the desk.";
+        gameMap[6] ="Pantry, with some vials. Some yellow, some Pink.";
+        gameMap[7] ="A plaque on an eastern door reads: 'Warden'. The cooridoor continues to the north.";
+        gameMap[8] ="No one left here. Door to north, 'Warden'.";
+        gameMap[9] ="A cell like mine. Nothing here but an old friend.";
+        gameMap[10] ="Two great doors to the south. A darkened hallway leads to the west. The north is lit.";
+        gameMap[11] ="My cell. Opened. Blood on the walls. Light from the West.";
+
+        var images = [];
+        images[0] = "tortureChamber.jpg";
+        images[1] = "levers.jpg";
+        images[2] = "neCell.jpg";
+        images[3] = "kitchen.jpg";
+        images[4] = "nCorridor.jpg";
+        images[5] = "office.jpg";
+        images[6] = "vial.jpg";
+        images[7] = "sCorridor.jpg";
+        images[8] = "wR.jpg";
+        images[9] = "swCell.jpg";
+        images[10] = "entry.jpg";
+        images[11] = "seCell.jpg";
+
+
+        barrierMessageDefault = "A wall blocks your path.";
+        barrierMessageLock = "It's locked.";
+        barrierMessageBars = "The path is blocked by iron bars.";
+
+        var helpMessage = [];
+        helpMessage[0] = "Keys...So many keys...";
+        helpMessage[1] = "Try pulling the left, center, or right lever.";
+        helpMessage[2] = "That keychain looks helpful...";
+        helpMessage[3] = "";
+        helpMessage[4] = "should find the key...";
+        helpMessage[5] = "The Key!";
+        helpMessage[6] = "Maybe save the game?";
+        helpMessage[7] = "";
+        helpMessage[8] = "Don't eat the food.";
+        helpMessage[9] = "Check the guard";
+        helpMessage[10] = "";
+        helpMessage[11] = "Theres a letter";
+
+        var image = document.getElementById("gameImage");
+        /*
+
+                            XX        XX        XX
+                       XX [0,EK] |3 [1,LP]||L [2,WK] XX                   K= key: unlocks |1     . . . . .
+                            XX        ~~        XX                        |1= Cell door: requires key
+                       XX [3,N ] |2 [4,  ] XX [5,SK] XX                   SK= Storeroom key: unlocks |2
+                            \/        /\        /\                        |2= Storeroom door  M=Map
+                       XX [6,AP] XX [7,  ] -  [8, M] XX                   A= Antidote: Drink or player will die P=poison, player dies
+                            XX        /\        XX                        NK= North block Key: unlocks ~~
+                       XX [9,NK] |1 [10,E] |1 [11,K] XX                   LP= Lever Puzzle: once correct opens ||L
+                            XX       \--/        XX                       WK= Warden's Key: Opens Warden's cell |3
+                                                                          XX= default boundary, /\ or \/ = passable
+                                                                          E=Exit, EK= Exit key, \--/= win game
+
+        */
+
+
+        //The img element
+        //The input and output fields
+        var output = document.querySelector("#output");
+        var input = document.querySelector("#input");
+
+        //The button
+        var button = document.querySelector("#proceed");
+        button.style.cursor = "pointer";
+        button.addEventListener("click", clickHandler, false);
+        button.addEventListener("mousedown", mousedownHandler, false);
+        button.addEventListener("mouseout", mouseoutHandler, false);
+
+        var save = document.querySelector("#save");
+        save.addEventListener("click", saveHandler, false);
+        save.addEventListener("mousedown", mousedownHandler, false);
+        save.addEventListener("mouseout", mouseoutHandler, false);
+
+        var load = document.querySelector("#load");
+        load.addEventListener("click", loadHandler, false);
+        load.addEventListener("mousedown", mousedownHandler, false);
+        load.addEventListener("mouseout", mouseoutHandler, false);
+
+        //Listen for enter key presses
+        window.addEventListener("keydown", keydownHandler, false);
+
+        //Dispay the player's location
+        render();
+
+        function mousedownHandler()
+{
+ button.style.background
+   = "-webkit-linear-gradient(top, rgba(0,0,0,0.2), rgba(255,255,255,0.3))";
+ button.style.background
+   = "-moz-linear-gradient(top, rgba(0,0,0,0.2), rgba(255,255,255,0.3))";
+ button.style.background
+   = "linear-gradient(top, rgba(0,0,0,0.2), rgba(255,255,255,0.3))";
+}
+
+function mouseoutHandler()
+{
+ button.style.background
+   = "-webkit-linear-gradient(top, rgba(255,255,255,0.6), rgba(0,0,0,0.2))";
+ button.style.background
+   = "-moz-linear-gradient(top, rgba(255,255,255,0.6), rgba(0,0,0,0.2))";
+ button.style.background
+   = "linear-gradient(top, rgba(255,255,255,0.6), rgba(0,0,0,0.2))";
+}
+
+function clickHandler()
+{
+  button.style.background
+   = "-webkit-linear-gradient(top, rgba(255,255,255,0.6), rgba(0,0,0,0.2))";
+  button.style.background
+   = "-moz-linear-gradient(top, rgba(255,255,255,0.6), rgba(0,0,0,0.2))";
+  button.style.background
+   = "linear-gradient(top, rgba(255,255,255,0.6), rgba(0,0,0,0.2))";
+
+  playGame();
+
+}
+
+function saveHandler() {
+    save.style.background
+     = "-webkit-linear-gradient(top, rgba(255,255,255,0.6), rgba(0,0,0,0.2))";
+    save.style.background
+     = "-moz-linear-gradient(top, rgba(255,255,255,0.6), rgba(0,0,0,0.2))";
+    save.style.background
+     = "linear-gradient(top, rgba(255,255,255,0.6), rgba(0,0,0,0.2))";
+
+    saveGame();
+
+}
+
+function loadHandler() {
+    load.style.background
+     = "-webkit-linear-gradient(top, rgba(255,255,255,0.6), rgba(0,0,0,0.2))";
+    load.style.background
+     = "-moz-linear-gradient(top, rgba(255,255,255,0.6), rgba(0,0,0,0.2))";
+    load.style.background
+     = "linear-gradient(top, rgba(255,255,255,0.6), rgba(0,0,0,0.2))";
+
+    loadGame();
+
+}
+function checkStatus()
+{
+    if (playerHealth < 4) {
+        gameMessage += "Find an antidote now!"
+    }
+    if (playerHealth < 7) {
+        gameMessage += "You must have been poisoned.";
+    }
+    if (playerHealth < 11) {
+        gameMessage += "You are feeling ill.";
+    }
+    if (playerHealth <= 0) {
+        dead = true;
+    }
+    if (dead == true) {
+        
+        button.disabled=true;
+        input.disabled=true;
+        gameMessage = "You have died."
+        gameMessage += "GAMEOVER";
+    }
+}
+function keydownHandler(event)
+{
+  
+ 
+  if(event.keyCode === 13)
+  {
+      playGame();
+  }
+}
+
+function saveGame()
+{
+
+    localStorage.setItem("location",playerLocation);
+    localStorage.setItem("savedInventory", JSON.stringify(inventory));
+    localStorage.setItem("poison", playerPoisoned);
+}
+
+function loadGame()
+{
+    var retrievedInventory = localStorage.getItem("savedInventory");
+    var inventory2 = JSON.parse(retrievedInventory);
+    var retrievedLocaton = localStorage.getItem("location");
+    var retrievedPoisonStatus = localStorage.getItem("poison");
+    playerLocation = retrievedLocaton;
+    inventory = inventory2;
+    playerPoisoned = retrievedPoisonStatus;
+    render();
+
+}
+
+function playGame()
+{
+    if (playerPoisoned == true)
+    {
+        playerHealth -= 1;
+    }
+
+    //Get the player's input and convert it to lowercase
+    playerCommand = input.value;
+    playerCommand = playerCommand.toLowerCase();
+
+    //Reset these variables from the previous turn
+    gameMessage = "";
+    command = "";
+  
+  
+    //Figure out the player's action
+    for(i = 0; i < commandList.length; i++)
+    {
+        if (playerCommand.indexOf(commandList[i]) !== -1)
+        {
+            command = commandList[i];
+            console.log("player's action: " + command);
+            break;
+        }
+    }
+
+    //Figure out the item the player wants
+    for (i = 0; i < itemList.length; i++)
+    {
+        if (playerCommand.indexOf(itemList[i]) !== -1)
+        {
+            item = itemList[i];
+            console.log("player's item: " + item);
+        }
+    }
+
+    for (i = 0; i < interactables.length; i++) {
+        if (playerCommand.indexOf(interactables[i]) !== -1) {
+            whichLever = interactables[i];
+            console.log("which lever is: " + whichLever);
+        }
+    }
+
+    //Choose the correct action
+    switch (command)
+    {
+        case "north":
+            if (playerLocation === 10 || playerLocation === 8 || playerLocation ===7 || playerLocation ===6)
+      {
+            playerLocation -= 3;
+      }
+        else if (playerLocation===4)
+        {
+            if (usedSkeletonKey === true) {
+                playerLocation -= 3;
+            }
+            else
+            {
+                gameMessage = barrierMessageLock;
+            }
+        }
+      else
+      {
+            gameMessage = barrierMessageDefault;
+      }
+      break;
+
+    case "east":
+        if (playerLocation ===10 || playerLocation ===9 || playerLocation ===7 || playerLocation === 3 || playerLocation ===0)
+      {
+            playerLocation += 1;
+      }
+        else if (playerLocation ===1)
+        {
+            if (puzzleSolved === true)
+            {
+                playerLocation += 1;
+            }
+            else
+            {
+                gameMessage = barrierMessageBars;
+            }
+        }
+      else
+      {
+            gameMessage = barrierMessageDefault;
+      }
+      break;
+
+    case "south":
+        if (playerLocation >= 1 && playerLocation <= 5 || playerLocation === 7)
+      {
+            playerLocation += 3;
+      }
+      else
+      {
+            gameMessage = barrierMessageDefault
+      }
+      break;
+
+    case "west":
+        if (playerLocation === 10 || playerLocation === 11 || playerLocation ===8 ||playerLocation ===4 || playerLocation == 2)
+      {
+            playerLocation -= 1;
+      }
+        else if (playerLocation === 1)
+        {
+            if (usedTortureKey == true)
+            {
+                playerLocation -= 1;
+            }
+            else
+            {
+                gameMessage = barrierMessageLock;
+            }
+        }
+      else
+      {
+            gameMessage = barrierMessageDefault[playerLocation];
+      }
+      break;
+
+    case "help":
+      //Display a hint if there is one for this location
+        if (helpMessage[playerLocation] !== "")
+      {
+            gameMessage = helpMessage[playerLocation] + " ";
+      }
+      break;
+
+    case "take":
+      takeItem()
+		  break;
+
+		case "use":
+		  useItem();
+		  break;
+
+        case "pull":
+            pullLever();
+            break;
+
+		default:
+		  gameMessage = "I don't understand that.";
+  }
+
+  //Render the game
+  render();
+}
+
+function takeItem()
+{
+  //Find the index number of the item in the items array
+  var itemIndexNumber = itemList.indexOf(item);
+
+  //Does the item exist in the game world
+  //and is it at the player's current location?
+  if(itemIndexNumber !== -1
+  && itemLocations[itemIndexNumber] === playerLocation)
+  {
+    gameMessage = "You take the " + item + ".";
+
+      //Add the item to the player's inventory
+    inventory.push(item);
+
+    //Remove the item from the game world
+    itemList.splice(itemIndexNumber, 1);
+    itemLocations.splice(itemIndexNumber, 1);
+
+    //Display in the console for testing
+    console.log("World items: " + itemList);
+    console.log("inventory items: " + inventory);
+  }
+  else
+  {
+    //Message if you try and take an item
+    //that isn't in the current location
+    gameMessage = "You can't do that.";
+    }
+}
+
+function useItem()
+{
+    //1. Find out if the item is in the inventory
+
+    //Find the item's array index number in the inventory
+  var inventoryIndexNumber = inventory.indexOf(item);
+
+    //If the index number is -1, then it isn't in the inventory.
+  //Tell the player that he or she isn't carrying it.
+  if(inventoryIndexNumber === -1)
+  {
+    gameMessage = "You're not carrying it.";
+  }
+
+    //If there are no items in the inventory, then
+    //tell the player the inventory is empty
+  if (inventory.length === 0)
+  {
+      gameMessage += " Your inventory is empty";
+  }
+
+    //2. If the item is found in the inventory
+  //figure out what to do with it
+  if (inventoryIndexNumber !== -1)
+  {
+    switch(item)
+    {
+        case "skeleton key":
+	        if (playerLocation === 4)
+        {
+	            gameMessage = "The key fits perfectly. The door unlocks.";
+	            usedSkeletonKey = true;
+
+          helpMessage[playerLocation] = "";
+        }
+        else
+        {
+          gameMessage = "The key won't work here."
+        }
+	      break;
+
+        case "bloody key":
+	        if (playerLocation === 1)
+        {
+          gameMessage
+            = "The strange key fits perfectly. The door unlocks.";
+          usedTortureKey = true;
+        }
+        else
+        {
+          gameMessage
+            = "The key won't work here...";
+        }
+	      break;
+
+        case "pink vial":
+	        
+	        gameMessage = "You drink the pink liquid.";
+	        gameMessage += "Searing pain errupts in your body.";
+	        gameMessage += "You die a painful death...";
+
+	        dead = true;
+
+	        inventory.splice(inventoryIndexNumber, 1);	      
+	        break;
+
+        case "yellow vial":
+
+            playerHealth = 12;
+            gameMessage = "You drink the yellow liquid.";
+            gameMessage += "It tastes vile, but you feel better already.";
+
+            playerPoisoned = false;
+
+            break;
+	   }
+   }
+}
+
+function pullLever()
+{
+    var interactableIndexNumber = interactables.indexOf(whichLever);
+
+    if (interactableIndexNumber !== -1
+    && playerLocation === 1 && puzzleSolved == false) {
+        gameMessage = "You pull the " + whichLever + ".";
+       
+
+        switch (whichLever) {
+            case "left lever":
+
+
+                if (left == false) {
+
+                    puzzlecount += lever1[leverTurn];
+                    ++leverTurn;
+
+                    left = true;
+
+                    if (puzzlecount >= 15) {
+                        gameMessage += "The iron gate is opened.";
+                        puzzleSolved = true;
+                    }
+
+                    else if (puzzlecount < 15 && leverTurn >= 3) {
+                        console.log(leverTurn);
+                        console.log(puzzlecount);
+                        gameMessage += "The levers reset and the gates close.";
+                        leverTurn = 0;
+                        left = false;
+                        center = false;
+                        right = false;
+                        puzzlecount = 0;
+
+                    }
+                }
+                else {
+                    gameMessage = "You already pulled this lever. Try another";
+                }
+                break;
+
+            case "center lever":
+
+
+                if (center == false) {
+
+                    puzzlecount += lever2[leverTurn];
+                    ++leverTurn;
+
+                    center = true;
+
+                
+                    if (puzzlecount >= 15) {
+                        gameMessage += "The last iron gate is opened.";
+                        puzzleSolved = true;
+                    }
+
+                    else if (puzzlecount < 15 && leverTurn >= 3) {
+
+                        gameMessage = "The levers reset and the gates close.";
+                        leverTurn = 0;
+                        left = false;
+                        right = false;
+                        center = false;
+                        puzzlecount = 0;
+                        console.log(leverTurn);
+                        console.log(puzzlecount);
+                    }
+                }
+                else {
+                    gameMessage = "You already pulled this lever. Try another";
+                }
+                break;
+        
+    
+            case "right lever":
+                
+
+                if (right == false) {
+
+                    puzzlecount += lever3[leverTurn];
+                    ++leverTurn;
+
+                    right = true;
+
+                    if (puzzlecount >= 15) {
+                        gameMessage += "The last iron gate is opened.";
+                        puzzleSolved = true;
+                    }
+
+                    else if (puzzlecount < 15 && leverTurn >= 3) {
+
+                        gameMessage = "The levers reset and the gates close.";
+                        leverTurn = 0;
+                        left = false;
+                        center = false;
+                        right = false;
+                        puzzlecount = 0;
+                        console.log(leverTurn);
+                        console.log(puzzlecount);
+                    }
+                    
+                }
+                else {
+                    gameMessage = "You already pulled this lever. Try another";
+                }
+                break;
+        }
+    }
+    else {
+        //Message if you try and take an item
+        //that isn't in the current location
+        gameMessage = "You can't do that.";
+    }
+}
+
+function render()
+{
+  //Render the location
+    output.innerHTML = gameMap[playerLocation];
+    image.src = "images/" + images[playerLocation];
+
+  //Display an item if there's one in this location
+  //1. Loop through all the game items
+    for (var i = 0; i < itemList.length; i++)
+  {
+   //Find out if there's an item at this location
+      if (playerLocation === itemLocations[i])
+   {
+     //Display it
+     output.innerHTML
+      += "<br>You see a <strong>"
+      + itemList[i]
+      + "</strong> here.";
+   }
+  }
+
+    //Display the player's inventory contents
+  if (inventory.length !== 0)
+  {
+      output.innerHTML += "<br>You are carrying: " + inventory.join(", ");
+  }
+  checkStatus();
+  if (playerLocation === 0 && playerPoisoned == false)
+  {
+      gameMessage += "You're free! GAMEOVER!"
+      button.disabled = true;
+      input.disabled = true;
+  }
+    //Display the game message
+  output.innerHTML += "<br><em>" + gameMessage + "</em>";
+
+  //Clear the input field
+  input.value = "";
+  
+}
+
+    </script>
+</body>
+</html>
