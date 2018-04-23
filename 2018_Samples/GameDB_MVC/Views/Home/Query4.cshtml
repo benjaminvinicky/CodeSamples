@@ -1,0 +1,12 @@
+﻿@{
+    ViewBag.Title = "Select Platform";
+}
+<h2>@ViewBag.Message</h2>
+
+<form action="/Home/ProcessForm4" method="post">
+    Platform
+    @Html.DropDownList("TheList")
+    <p>
+        <input type="submit" value="Submit" />
+    </p>
+</form>

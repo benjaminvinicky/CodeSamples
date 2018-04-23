@@ -1,0 +1,27 @@
+﻿@model IEnumerable<ISIT420Final.Models.TopGenre>
+
+@{
+    ViewBag.Title = ViewBag.Message;
+}
+
+<h2>@ViewBag.Message</h2>
+
+<table class="table">
+    <tr>
+        <th>Genre</th>
+        <th>Total Units Sold</th>
+    </tr>
+    @foreach (var item in Model)
+    // Model gets the Model Property of the ViewDataDictionary object
+    {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Genre)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Quantity)
+            </td>
+
+        </tr>
+    }
+</table>

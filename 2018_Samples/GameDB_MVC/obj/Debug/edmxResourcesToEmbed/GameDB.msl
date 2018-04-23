@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
+  <EntityContainerMapping StorageEntityContainer="GameDBModelStoreContainer" CdmEntityContainer="GameDBEntities">
+    <EntitySetMapping Name="Games">
+      <EntityTypeMapping TypeName="GameDBModel.Game">
+        <MappingFragment StoreEntitySet="Game">
+          <ScalarProperty Name="GameID" ColumnName="GameID" />
+          <ScalarProperty Name="GameName" ColumnName="GameName" />
+          <ScalarProperty Name="GameDateReleased" ColumnName="GameDateReleased" />
+          <ScalarProperty Name="GameMetacriticScore" ColumnName="GameMetacriticScore" />
+          <ScalarProperty Name="GamePrice" ColumnName="GamePrice" />
+          <ScalarProperty Name="GameDescription" ColumnName="GameDescription" />
+          <ScalarProperty Name="GameImageHeader" ColumnName="GameImageHeader" />
+          <ScalarProperty Name="GameImageBackground" ColumnName="GameImageBackground" />
+          <ScalarProperty Name="GameWebsite" ColumnName="GameWebsite" />
+          <ScalarProperty Name="GameSalesNorthAmerica" ColumnName="GameSalesNorthAmerica" />
+          <ScalarProperty Name="GameSalesEurope" ColumnName="GameSalesEurope" />
+          <ScalarProperty Name="GameSalesJapan" ColumnName="GameSalesJapan" />
+          <ScalarProperty Name="GameSalesOther" ColumnName="GameSalesOther" />
+          <ScalarProperty Name="RatingID" ColumnName="RatingID" />
+          <ScalarProperty Name="GenreID" ColumnName="GenreID" />
+          <ScalarProperty Name="PublisherID" ColumnName="PublisherID" />
+          <ScalarProperty Name="PlatformID" ColumnName="PlatformID" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="Genres">
+      <EntityTypeMapping TypeName="GameDBModel.Genre">
+        <MappingFragment StoreEntitySet="Genre">
+          <ScalarProperty Name="GenreID" ColumnName="GenreID" />
+          <ScalarProperty Name="GenreName" ColumnName="GenreName" />
+          <ScalarProperty Name="GenreDescription" ColumnName="GenreDescription" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="Platforms">
+      <EntityTypeMapping TypeName="GameDBModel.Platform">
+        <MappingFragment StoreEntitySet="Platform">
+          <ScalarProperty Name="PlatformID" ColumnName="PlatformID" />
+          <ScalarProperty Name="PlatformName" ColumnName="PlatformName" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="Publishers">
+      <EntityTypeMapping TypeName="GameDBModel.Publisher">
+        <MappingFragment StoreEntitySet="Publisher">
+          <ScalarProperty Name="PublisherID" ColumnName="PublisherID" />
+          <ScalarProperty Name="PublisherName" ColumnName="PublisherName" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="Ratings">
+      <EntityTypeMapping TypeName="GameDBModel.Rating">
+        <MappingFragment StoreEntitySet="Rating">
+          <ScalarProperty Name="RatingID" ColumnName="RatingID" />
+          <ScalarProperty Name="RatingName" ColumnName="RatingName" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+  </EntityContainerMapping>
+</Mapping>

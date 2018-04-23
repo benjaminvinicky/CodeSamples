@@ -1,0 +1,12 @@
+﻿@{
+    ViewBag.Title = "Select Region";
+}
+<h2>@ViewBag.Message</h2>
+
+<form action="/Home/ProcessForm2" method="post">
+    Region
+    @Html.DropDownList("TheList")
+    <p>
+        <input type="submit" value="Submit" />
+    </p>
+</form>

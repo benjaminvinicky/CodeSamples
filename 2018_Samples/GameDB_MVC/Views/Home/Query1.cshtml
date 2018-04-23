@@ -1,0 +1,12 @@
+﻿@{
+    ViewBag.Title = "Store Select";
+}
+<h2>@ViewBag.Message</h2>
+
+<form action="/Home/ProcessForm1" method="post">
+    ESRB
+    @Html.DropDownList("TheList")
+    <p>
+        <input type="submit" value="Submit" />
+    </p>
+</form>

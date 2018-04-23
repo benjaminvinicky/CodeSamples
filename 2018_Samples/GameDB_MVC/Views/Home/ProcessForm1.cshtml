@@ -1,0 +1,35 @@
+﻿@model IEnumerable<ISIT420Final.Models.TopGrossingESRB>
+
+@{
+    ViewBag.Title = ViewBag.Message;
+}
+
+<h2>@ViewBag.Message</h2>
+
+<table class="table">
+    <tr>
+        <th>Game Title</th>
+        <th>Listing Price</th>
+        <th>Units Sold NA</th>
+        <th>Total Gross Sales</th>
+    </tr>
+    @foreach (var item in Model)
+    // Model gets the Model Property of the ViewDataDictionary object
+    {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Price)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Quantity)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.TotalSales)
+            </td>
+
+        </tr>
+    }
+</table>
